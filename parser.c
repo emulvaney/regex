@@ -58,19 +58,18 @@ parseclass(struct Tree *t, struct Program *prog, char **ref)
   struct AST *x, *bot = t->stack;
   unsigned char *sp = (unsigned char*)*ref;
   unsigned mask = prog->charset[0];
-  int i, c;
+  int c, negate = 0;
 
   assert(mask != 0);  /* TODO */
   assert(((mask - 1) & mask) == 0);
   prog->charset[0] <<= 1;
   if(*sp == '^') {
     sp++;
-    for(i=1; i < sizeof prog->charset; i++)
-      prog->charset[i] ^= mask;
+    negate = 1;
   }
   if(*sp == ']') {
     c = *sp++;
-    prog->charset[c] ^= mask;
+    goto notspecial;
   }
   for(;;) {
     c = *sp++;
@@ -81,16 +80,21 @@ parseclass(struct Tree *t, struct Program *prog, char **ref)
     case ']':
       goto finished;
     default:
+    notspecial:
       if(sp[0] != '-' || sp[1] == ']' || sp[1] == '\0') {
-	prog->charset[c] ^= mask;
+	prog->charset[c] |= mask;
       } else { /* it's a range like "A-Z" */
 	for(; c <= sp[1]; c++)
-	  prog->charset[c] ^= mask;
+	  prog->charset[c] |= mask;
 	sp += 2;
       }
     }
   }
  finished:
+  if(negate) {
+    for(c=1; c < sizeof prog->charset; c++)
+      prog->charset[c] ^= mask;
+  }
   x = push(t);
   x->op = Charset;
   x->args.set.mask    = mask;
