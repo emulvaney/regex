@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "grep.h"
+#include "core.h"
 
 int
 main(int argc, char *argv[])

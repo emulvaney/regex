@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include "grep.h"
+#include "core.h"
 
 struct Tree {
   struct AST *root, *stack, *heap;

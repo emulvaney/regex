@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "grep.h"
+#include "core.h"
 
 struct Thread {
   struct Inst *pc;  /* this threads program counter */
