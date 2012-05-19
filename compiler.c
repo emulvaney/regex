@@ -41,7 +41,7 @@ compiletree(struct Inst *pc, struct Flags *flags, struct AST *t)
       goto done;
     case Dollar:
       flags->matchend = 1;
-      break;
+      goto done;
     case Concat:
       pc = compiletree(pc, flags, t->args.next.x);
       t = t->args.next.y;
