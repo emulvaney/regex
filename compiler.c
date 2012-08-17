@@ -49,9 +49,11 @@ compiletree(struct Inst *pc, struct Flags *flags, struct AST *t)
     case Either:
       pc->opcode = Split;
       pc->args.next.x = pc+1;
-      pc = pc->args.next.y = compiletree(pc+1, flags, t->args.next.x);
-      t = t->args.next.y;
-      break;
+      next = compiletree(pc+1, flags, t->args.next.x);
+      pc->args.next.y = next+1;
+      next->opcode = Jump;
+      pc = next->args.next.x = compiletree(next+1, flags, t->args.next.y);
+      goto done;
     case Optional:
       pc->opcode = Split;
       pc->args.next.x = pc+1;
@@ -124,7 +126,7 @@ compile(struct Program *prog, char *regex)
     return (errno=EINVAL, -1);
   rc = parse(&t, prog, regex);
   if(rc) return rc;
-  max = 2*strlen(regex) + 4;
+  max = 2*strlen(regex) + 5;
   prog->code = calloc(max, sizeof *prog->code);
   if(prog->code == NULL) {
     free(t);
