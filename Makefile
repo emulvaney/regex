@@ -8,5 +8,5 @@ clean:
 distclean: clean
 	rm -f grep *~
 
-grep: grep.o vm.o compiler.o parser.o
+grep: grep.o vm.o compiler.o parser.o debug.o
 	$(CC) -o $@ $^
