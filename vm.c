@@ -109,7 +109,7 @@ vm(struct Program *prog, char *input, char **saved)
   struct Thread *t;
   struct Inst *pc;
   char *sp = input;
-  int i, rc=0;
+  int i, j, rc=0;
 
   if(!prog || !input || !saved || !prog->code || prog->size < 1)
     return (errno=EINVAL, -1);
@@ -140,7 +140,12 @@ vm(struct Program *prog, char *input, char **saved)
       case Match:
 	memcpy(saved, t->saved, sizeof t->saved);
 	rc = 1;  /* match found */
-	clist.n = 0;  /* drop the remaining threads */
+	assert(t->saved[0] != NULL);
+	j = clist.n - 1;
+	while(clist.t[j].saved[0] == NULL ||
+	      clist.t[j].saved[0] > t->saved[0])
+	  j--;
+	clist.n = j + 1;  /* drop threads matching later */
 	break;
       default:
 	abort();
