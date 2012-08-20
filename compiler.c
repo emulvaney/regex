@@ -9,6 +9,8 @@
 #include <string.h>
 #include "core.h"
 
+enum { MAX_SAVE=9 };  /* capture only $0 through $9 */
+
 struct Flags {
   int matchend;  /* match to end of string */
   int nextsave;
@@ -97,6 +99,10 @@ compiletree(struct Inst *pc, struct Flags *flags, struct AST *t)
       pc = next + 1;
       goto done;
     case Capture:
+      if(flags->nextsave > MAX_SAVE) {
+	t = t->args.next.x;
+	break;
+      }
       savepoint = 2*flags->nextsave++;
       pc->opcode = Save;
       pc->args.i = savepoint;
