@@ -126,7 +126,7 @@ compile(struct Program *prog, char *regex)
     return (errno=EINVAL, -1);
   rc = parse(&t, prog, regex);
   if(rc) return rc;
-  max = 2*strlen(regex) + 5;
+  max = 2*strlen(regex) + 6;
   prog->code = calloc(max, sizeof *prog->code);
   if(prog->code == NULL) {
     free(t);

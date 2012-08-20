@@ -71,7 +71,7 @@ struct Program {
   unsigned charset[UCHAR_MAX];
 };
 
-/* parse(*ast, regex)
+/* parse(*ast, prog, regex)
  *
  * Create the abstract syntax tree (AST) for a new program and the
  * given regex.  When the regex is successfully parsed, *ast will be

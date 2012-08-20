@@ -234,7 +234,7 @@ int
 parse(struct AST **ast, struct Program *prog, char *regex)
 {
   struct Tree t;
-  size_t max = 2*strlen(regex) + 4;
+  size_t max = 2*strlen(regex) + 5;
   int rc;
 
   rc = inittree(&t, max);
@@ -243,6 +243,7 @@ parse(struct AST **ast, struct Program *prog, char *regex)
   prog->charset[0] = 1;  /* the next bit to use */
   rc = parseregex(&t, prog, regex);
   prog->charset[0] = 0;  /* we never match NULs */
+  assert(t.stack <= t.heap);  /* overflow check */
   if(rc) {
     freetree(&t);
     return rc;
