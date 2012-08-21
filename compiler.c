@@ -9,11 +9,26 @@
 #include <string.h>
 #include "core.h"
 
+/* Six instructions are required to match the smallest regex:
+ *     000 Split 003 001
+ *     001 AnyChar
+ *     002 Jump 000
+ *     003 Save 0
+ *     004 Save 1
+ *     005 Match
+ * Each node in an AST corresponding to a character in a regex can add
+ * at most two instructions (see compiletree()); nodes that do not
+ * correspond to characters in the original regex add none.
+ * Therefore, an upper-bound on the program size is 2*N+6 for a regex
+ * of size N (see compile()).
+ */
+enum { MIN_CODESIZE=6 };
+
 enum { MAX_SAVE=9 };  /* capture only $0 through $9 */
 
 struct Flags {
   int matchend;  /* match to end of string */
-  int nextsave;
+  int nextsave;  /* 0..MAX_SAVE for Save instructions */
 };
 
 static struct Inst*
@@ -132,7 +147,7 @@ compile(struct Program *prog, char *regex)
     return (errno=EINVAL, -1);
   rc = parse(&t, prog, regex);
   if(rc) return rc;
-  max = 2*strlen(regex) + 6;
+  max = 2*strlen(regex) + MIN_CODESIZE;
   prog->code = calloc(max, sizeof *prog->code);
   if(prog->code == NULL) {
     free(t);

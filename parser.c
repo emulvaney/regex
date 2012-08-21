@@ -9,6 +9,16 @@
 #include <string.h>
 #include "core.h"
 
+/* The smallest AST (for an empty regex) contains five parts:
+ *       (Concat (WeakStar (AnyChar))
+ *               (Capture (Epsilon)))
+ * Each character in a regex can add at most one part to this tree
+ * (see parselevel()), while adjacent parts are concatenated (adding
+ * another).  Therefore, an upper-bound on the tree size is 2*N+5 for
+ * a regex of size N (see parse()).
+ */
+enum { MIN_TREESIZE=5 };
+
 struct Tree {
   struct AST *root, *stack, *heap;
 };
@@ -35,6 +45,10 @@ freetree(struct Tree *t)
 #define pop(t)   (*--(t)->heap = *--(t)->stack, (t)->heap)
 #define drop(t)  ((void)(t)->stack--)
 
+/* Concatenate all the elements on the top of the stack down to bot,
+ * leaving one element at bot.  If there are no elements to
+ * concatenate (so bot > top(t)), push Epsilon instead.
+ */
 static void
 concat(struct AST *bot, struct Tree *t)
 {
@@ -60,8 +74,8 @@ parseclass(struct Tree *t, struct Program *prog, char **ref)
   unsigned mask = prog->charset[0];
   int c, negate = 0;
 
-  assert(mask != 0);  /* TODO */
-  assert(((mask - 1) & mask) == 0);
+  assert(mask != 0);  /* only 32 character classes allowed (TODO) */
+  assert(((mask - 1) & mask) == 0);  /* only one bit should be set */
   prog->charset[0] <<= 1;
   if(*sp == '^') {
     sp++;
@@ -234,9 +248,11 @@ int
 parse(struct AST **ast, struct Program *prog, char *regex)
 {
   struct Tree t;
-  size_t max = 2*strlen(regex) + 5;
+  size_t max = 2*strlen(regex) + MIN_TREESIZE;
   int rc;
 
+  if(!ast || !prog || !regex)
+    return (errno=EINVAL, -1);
   rc = inittree(&t, max);
   if(rc) return rc;
   memset(prog->charset, 0, sizeof prog->charset);
