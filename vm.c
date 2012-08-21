@@ -11,7 +11,7 @@
 #include "core.h"
 
 struct Thread {
-  struct Inst *pc;  /* this threads program counter */
+  struct Inst *pc;  /* this thread's program counter */
   char *saved[20];  /* for Save instructions */
   int listid;       /* used by ThreadList */
 };
@@ -21,11 +21,17 @@ thread(struct Inst *pc, char **saved)
 {
   struct Thread t;
   t.pc = pc;
-  t.listid = 0;
+  t.listid = 0;  /* not in any list */
   memcpy(t.saved, saved, sizeof t.saved);
   return t;
 }
 
+/* Threads are stored and processed sequentially from t[0] to t[n-1].
+ * To ensure that no duplicates are added to a list, each instruction
+ * pc, when added, is marked by id at t[pc-pc0].listid--we also mark
+ * instructions that lead to those that are added (see addthread()) to
+ * avoid unnecessary re-computation.
+ */
 struct ThreadList {
   struct Thread *t;  /* storage for the thread list */
   struct Inst *pc0;  /* the first instruction of the program */
@@ -38,9 +44,8 @@ static int
 initlist(struct ThreadList *list, struct Program *prog)
 {
   assert(prog->size > 0);
-  memset(list, 0, sizeof *list);
   list->n   = 0;
-  list->max = prog->size;
+  list->max = prog->size;  /* we need room for all instructions */
   list->pc0 = prog->code;
   list->id  = 1;
   list->t = calloc(list->max, sizeof *list->t);
@@ -64,12 +69,16 @@ swap(struct ThreadList* alist, struct ThreadList *blist)
 static void
 clear(struct ThreadList *list) {
   list->n = 0;
-  if(!++list->id) {
+  if(!++list->id) {  /* not likely but possible */
     memset(list->t, 0, list->max * sizeof *list->t);
     list->id = 1;
   }
 }
 
+/* Add a thread to a thread list, unless it's already in the list.
+ * The thread will be executed until a new input character is
+ * required; sp marks the current position in the input.
+ */
 static void
 addthread(struct ThreadList *list, char *sp, struct Thread t)
 {
@@ -93,7 +102,7 @@ addthread(struct ThreadList *list, char *sp, struct Thread t)
       t.saved[t.pc->args.i] = sp;
       t.pc++;
       break;
-    default:
+    default: /* an instruction handled by vm() */
       p = &list->t[list->n++];
       t.listid = p->listid;
       *p = t;
@@ -105,7 +114,7 @@ addthread(struct ThreadList *list, char *sp, struct Thread t)
 int
 vm(struct Program *prog, char *input, char **saved)
 {
-  struct ThreadList clist, nlist;
+  struct ThreadList clist={0}, nlist={0};
   struct Thread *t;
   struct Inst *pc;
   char *sp = input;
@@ -139,7 +148,7 @@ vm(struct Program *prog, char *input, char **saved)
 	/* no break */
       case Match:
 	memcpy(saved, t->saved, sizeof t->saved);
-	rc = 1;  /* match found */
+	rc = 1;  /* first or longer match found */
 	assert(t->saved[0] != NULL);
 	j = clist.n - 1;
 	while(clist.t[j].saved[0] == NULL ||
@@ -147,7 +156,7 @@ vm(struct Program *prog, char *input, char **saved)
 	  j--;
 	clist.n = j + 1;  /* drop threads matching later */
 	break;
-      default:
+      default: /* should have been handled by addthread() */
 	abort();
       }
     }
