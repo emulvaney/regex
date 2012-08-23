@@ -118,7 +118,7 @@ parseclass(struct Tree *t, struct Program *prog, char **ref)
   }
  finished:
   if(negate) {
-    for(c=1; c < sizeof prog->charset; c++)
+    for(c=1; c < UCHAR_MAX; c++)
       prog->charset[c] ^= mask;
   }
   x = push(t);
