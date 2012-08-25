@@ -138,6 +138,7 @@ vm(struct Program *prog, char *input, char **saved)
   rc = initlist(&clist, prog);  if(rc) goto done;
   rc = initlist(&nlist, prog);  if(rc) goto done;
 
+  memset(saved, 0, sizeof t->saved);
   addthread(&clist, sp, thread(prog->code, saved));
   do {
     for(i = 0; i < clist.n; i++) {

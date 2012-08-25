@@ -103,7 +103,7 @@ void freeprogram(struct Program *prog);
  * Execute compiled regex (prog) on input string (input).  If
  * successful, 1 is returned and the array (saved[20]) will contain
  * every position recorded by a Save instruction (unused entries will
- * be unchanged).  If no match is found, 0 is returned.  On error, -1
+ * be set NULL).  If no match is found, 0 is returned.  On error, -1
  * is returned and errno is set appropriately.
  */
 int vm(struct Program *prog, char *input, char **saved);
