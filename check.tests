@@ -1,0 +1,147 @@
+# Regex tests for make check (see check.awk).
+#
+# Comments beginning with "#" and blank lines are ignored.  Each test
+# begins with ":test REGEX [OUTFMT]".  Subsequent lines can be "+ TEXT
+# [EXPECT]" if they denote TEXT that should match REGEX, or "- TEXT"
+# if they should not.  The output to EXPECT from grep defaults to the
+# input TEXT if not specified.
+
+:test a
++ ab
++ ba
+- bb
+- AA  # should be case sensitive
+
+:test ^a
++ ab
+- ba
+
+:test a$
++ ba
+- ab
+
+:test ^(a)
++ a
+- (a)
+
+:test ab
++ abb
++ bab
+- ba
+
+:test a.b
++ axb
++ ayb
+- ab
+
+:test a()b
++ ab
+- a()b
+
+:test ab?c
++ ac
++ abc
+- abbc
+
+:test ^(ab)?c
++ c
++ abc
+- abbc
+
+:test ^ab*c
++ ac
++ abc
++ abbc
+- ababc  # ab*c is a(b*)c not (ab)*c
+
+:test ^(ab)*c
++ c
++ abc
+- abbc
++ ababc
+
+:test ^ab+c
+- ac
++ abc
++ abbc
+- ababc  # ab+c is a(b+)c not (ab)+c
+
+:test ^(ab)+c
+- ac
++ abc
+- abbc
++ ababc
+
+:test a|b
++ cac
++ cbc
+- ccc
+
+:test ^ab|c
++ ab
++ cb
+- ac  # ab|c is (ab)|c not a(b|c)
+
+:test [ab]
++ a
++ b
+- ]
+
+:test [^a]
+- a
++ b
+
+:test [0-9]
++ 0
++ 9
++ 5
+- -
+
+:test [^0-9]
+- 0
+- 9
+- 5
++ -
+
+:test []a]
+- [
++ a
++ ]
+
+:test [^]a]
++ [
+- a
+- ]
+
+:test [a^]
++ a
++ ^
+- ]
+
+:test a[bc]*d
++ ad
++ abbd
++ accd
+- axd
+
+:test (a()(.))|(b()(.)) $0,$1,$2,$3,$4,$5,$6
++ ab ab,ab,,b,,,
++ ba ba,,,,ba,,a
+
+:test a?(.*) $0,$1
++ aa aa,a
+
+:test a??(.*) $0,$1
++ aa aa,aa
+
+:test a+(.*) $0,$1
++ aa aa,
+
+:test a+?(.*) $0,$1
++ aa aa,a
+
+:test a*(.*) $0,$1
++ aa aa,
+
+:test a*?(.*) $0,$1
++ aa aa,aa

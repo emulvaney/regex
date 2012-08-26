@@ -8,5 +8,8 @@ clean:
 distclean: clean
 	rm -f grep *~
 
+check: grep
+	awk -f check.awk check.tests
+
 grep: grep.o vm.o compiler.o parser.o debug.o
 	$(CC) -o $@ $^
