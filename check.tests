@@ -77,6 +77,12 @@
 + cbc
 - ccc
 
+:test (a|)x(|b)
++ x
++ ax
++ xb
++ axb
+
 :test ^ab|c
 + ab
 + cb
@@ -124,9 +130,9 @@
 + accd
 - axd
 
-:test (a()(.))|(b()(.)) $0,$1,$2,$3,$4,$5,$6
-+ ab ab,ab,,b,,,
-+ ba ba,,,,ba,,a
+:test (a()(.))|(b()(.)) $$,$0,$1,$2,$3,$4,$5,$6
++ ab $,ab,ab,,b,,,
++ ba $,ba,,,,ba,,a
 
 :test a?(.*) $0,$1
 + aa aa,a
@@ -145,3 +151,24 @@
 
 :test a*?(.*) $0,$1
 + aa aa,aa
+
+:test ab\?
++ ab?
+- ab
+- a
+
+# For coverage: too many captures.
+:test (((.(((.(((.(((.))).))).))).))) $0,$9
++ abcdefg abcdefg,cde
+
+# For coverage: unclosed class should work.
+:test [0-9
++ 5
+
+# For coverage: unclosed groups shoud work.
+:test (.(. $1,$2
++ ab ab,b
+
+# For coverage: elaborate epsilons are okay.
+:test a(|)b
++ ab

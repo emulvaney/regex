@@ -6,7 +6,7 @@ clean:
 	rm -f *.o
 
 distclean: clean
-	rm -f grep *~
+	rm -f grep *~ *.gcov *.gcda *.gcno
 
 check: grep
 	awk -f check.awk check.tests
