@@ -1,7 +1,7 @@
 
 A Regular Expression Library
 
-Copyright (c) 2012 Eric Mulvaney
+Copyright (c) 2012 Eric Mulvaney <eric.mulvaney@gmail.com>
 
 
 INTRODUCTION
@@ -15,10 +15,11 @@ papers by Russ Cox <rsc@swtch.com>:
      "Regular Expression Matching: the Virtual Machine Approach",
      December 2009, <http://swtch.com/~rsc/regexp/regexp2.html>.
 
-Well, more the latter than the former, but the first paper is required
-reading.  Russ has many more papers on regular expressions, and links
-to various implementations (including his own) on his Implementing
-Regular Expressions page <http://swtch.com/~rsc/regexp/>.
+Well it's based more the latter than the former, but the first paper
+is required reading.  Russ has many more papers on regular
+expressions, and links to various implementations (including his own)
+on his Implementing Regular Expressions page
+<http://swtch.com/~rsc/regexp/>.
 
 This work completes the virtual machine he describes (in turn based on
 Rob Pike's implementation) with a full parser, byte-code compiler, a
@@ -29,20 +30,20 @@ exercise for the reader, and it was a lot of fun being that reader.
 
 USAGE
 
-The library interface isn't complete.  If you need to add regular
-expressions to your program, you should try one of the libraries Russ
-suggests (see above).  This code is mainly for fun and currently omits
-handy features like optional case-insensitivity, named character
-classes (e.g., [:space:]) and Perl-style escapes for same (e.g., \s).
-
-You can play with the grep program, however.  It takes two optional
-arguments, -d and -o fmt.  The first dumps the byte-code assembler for
-the regular expression, before doing any matching.
+You can play with the grep program.  It takes two optional arguments,
+-d and -o fmt.  The first dumps the byte-code assembler for the
+regular expression, before doing any matching.
 
 The second specifies the output format to use--this isn't common to
 grep programs.  E.g., "echo hello | ./grep -o '$0,$1' 'h(.*)o'" will
 print "hello,ell" instead of the input line that you would normally
 see; $0 is replaced by the matched area, $1 by the first capture.
+
+The library interface isn't complete.  If you need to add regular
+expressions to your program, you should try one of the libraries Russ
+suggests (see above).  This code is mainly for fun and currently omits
+handy features like optional case-insensitivity, named character
+classes (e.g., [:space:]) and Perl-style escapes for same (e.g., \s).
 
 If you really want to try the code in your own program, grep.c should
 be a good example of what you need to do.  The internal routines are
@@ -53,8 +54,8 @@ REGULAR EXPRESSION SYNTAX
 
 Basic regular expressions are supported:
 
-      ^e      - Match x at the beginning of a line.
-      e$      - Match x at the end.
+      ^e      - Match e at the beginning of a line.
+      e$      - Match e at the end.
 
 where e is a non-anchored regular expression of the form:
 
@@ -75,7 +76,8 @@ where e is a non-anchored regular expression of the form:
 
 where x and y are also non-anchored regular expressions, and "special
 characters" refers to '\', '(', ')', '?', '+', '*', '.' and '|'.
+
 Character classes may contain ranges (e.g., "0-9") and any of the
 special characters mentioned above without being escaped.  Inside a
-character class: '^' is only special at the beginning; ']' is not
-special when it is first; and '-' is not special at either end.
+character class, '^' is only special at the beginning, ']' is not
+special when it is first, and '-' is not special at either end.
