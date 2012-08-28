@@ -1,0 +1,81 @@
+
+A Regular Expression Library
+
+Copyright (c) 2012 Eric Mulvaney
+
+
+INTRODUCTION
+
+This is a regular expression matching library based on two excellent
+papers by Russ Cox <rsc@swtch.com>:
+
+     "Regular Expression Matching Can Be Simple And Fast", January
+     2007, <http://swtch.com/~rsc/regexp/regexp1.html>;
+
+     "Regular Expression Matching: the Virtual Machine Approach",
+     December 2009, <http://swtch.com/~rsc/regexp/regexp2.html>.
+
+Well, more the latter than the former, but the first paper is required
+reading.  Russ has many more papers on regular expressions, and links
+to various implementations (including his own) on his Implementing
+Regular Expressions page <http://swtch.com/~rsc/regexp/>.
+
+This work completes the virtual machine he describes (in turn based on
+Rob Pike's implementation) with a full parser, byte-code compiler, a
+basic grep implementation, efficient thread bookkeeping, character
+classes, anchors, escapes and more.  Russ left much of the work as an
+exercise for the reader, and it was a lot of fun being that reader.
+
+
+USAGE
+
+The library interface isn't complete.  If you need to add regular
+expressions to your program, you should try one of the libraries Russ
+suggests (see above).  This code is mainly for fun and currently omits
+handy features like optional case-insensitivity, named character
+classes (e.g., [:space:]) and Perl-style escapes for same (e.g., \s).
+
+You can play with the grep program, however.  It takes two optional
+arguments, -d and -o fmt.  The first dumps the byte-code assembler for
+the regular expression, before doing any matching.
+
+The second specifies the output format to use--this isn't common to
+grep programs.  E.g., "echo hello | ./grep -o '$0,$1' 'h(.*)o'" will
+print "hello,ell" instead of the input line that you would normally
+see; $0 is replaced by the matched area, $1 by the first capture.
+
+If you really want to try the code in your own program, grep.c should
+be a good example of what you need to do.  The internal routines are
+available through core.h, but their names are rather generic.
+
+
+REGULAR EXPRESSION SYNTAX
+
+Basic regular expressions are supported:
+
+      ^e      - Match x at the beginning of a line.
+      e$      - Match x at the end.
+
+where e is a non-anchored regular expression of the form:
+
+      (x)     - Match x, noting where it is matched.
+      xy      - Match x and then y.
+      x|y     - Match x or y.
+      x?      - Optionally match x.
+      x??     - Match x only if necessary.
+      x*      - Match zero or more x.
+      x*?     - Match zero or more x as necessary.
+      x+      - Match one or more x.
+      x+?     - Match one or more x as necessary.
+      .	      - Match any single character.
+      c	      - Match a non-special character, c.
+      \c      - Match a possibly special character, c.
+      [...]   - Match any character from the given set.
+      [^...]  - Match any character not in the given set.
+
+where x and y are also non-anchored regular expressions, and "special
+characters" refers to '\', '(', ')', '?', '+', '*', '.' and '|'.
+Character classes may contain ranges (e.g., "0-9") and any of the
+special characters mentioned above without being escaped.  Inside a
+character class: '^' is only special at the beginning; ']' is not
+special when it is first; and '-' is not special at either end.
