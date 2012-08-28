@@ -154,5 +154,5 @@ main(int argc, char *argv[])
     else if(rc < 0) errors  = 1;
   } while(++i < argc);
   freeprogram(&prog);
-  return errors ? 2 : !!matched;
+  return errors ? 2 : !matched;
 }
