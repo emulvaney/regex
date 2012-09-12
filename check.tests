@@ -130,26 +130,26 @@
 + accd
 - axd
 
-:test (a()(.))|(b()(.)) $$,$0,$1,$2,$3,$4,$5,$6
+:test -o $$,$0,$1,$2,$3,$4,$5,$6 (a()(.))|(b()(.))
 + ab $,ab,ab,,b,,,
 + ba $,ba,,,,ba,,a
 
-:test a?(.*) $0,$1
+:test -o $0,$1 a?(.*)
 + aa aa,a
 
-:test a??(.*) $0,$1
+:test -o $0,$1 a??(.*)
 + aa aa,aa
 
-:test a+(.*) $0,$1
+:test -o $0,$1 a+(.*)
 + aa aa,
 
-:test a+?(.*) $0,$1
+:test -o $0,$1 a+?(.*)
 + aa aa,a
 
-:test a*(.*) $0,$1
+:test -o $0,$1 a*(.*)
 + aa aa,
 
-:test a*?(.*) $0,$1
+:test -o $0,$1 a*?(.*)
 + aa aa,aa
 
 :test ab\?
@@ -158,7 +158,7 @@
 - a
 
 # For coverage: too many captures.
-:test (((.(((.(((.(((.))).))).))).))) $0,$9
+:test -o $0,$9 (((.(((.(((.(((.))).))).))).)))
 + abcdefg abcdefg,cde
 
 # For coverage: unclosed class should work.
@@ -166,9 +166,16 @@
 + 5
 
 # For coverage: unclosed groups shoud work.
-:test (.(. $1,$2
+:test -o $1,$2 (.(.
 + ab ab,b
 
 # For coverage: elaborate epsilons are okay.
 :test a(|)b
 + ab
+
+:test -i a[a-c][^a-c]
++ abz
++ ABZ
+- abc
+- azz
+- bbz

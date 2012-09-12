@@ -16,6 +16,7 @@
  */
 
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,6 +79,17 @@ concat(struct AST *bot, struct Tree *t)
   assert(top(t) == bot);
 }
 
+static void
+addtoclass(struct Program *prog, unsigned mask, int c)
+{
+  if(!(prog->options & IgnoreCase) || !isalpha(c))
+    prog->charset[c] |= mask;
+  else {
+    prog->charset[tolower(c)] |= mask;
+    prog->charset[toupper(c)] |= mask;
+  }
+}
+
 static int
 parseclass(struct Tree *t, struct Program *prog, char **ref)
 {
@@ -108,10 +120,10 @@ parseclass(struct Tree *t, struct Program *prog, char **ref)
     default:
     notspecial:
       if(sp[0] != '-' || sp[1] == ']' || sp[1] == '\0') {
-	prog->charset[c] |= mask;
+	addtoclass(prog, mask, c);
       } else { /* it's a range like "A-Z" */
 	for(; c <= sp[1]; c++)
-	  prog->charset[c] |= mask;
+	  addtoclass(prog, mask, c);
 	sp += 2;
       }
     }

@@ -19,7 +19,8 @@
 
 /* Opcodes (Inst.opcode) */
 enum Opcode {
-  Char,      /* die unless next char is c */
+  CharAlt,   /* die unless next char is chr.c or chr.alt */
+  Char,      /* die unless next char is chr.c */
   AnyChar,   /* accept the current character */
   CharSet,   /* die unless charset[next_char] & mask */
   Match,     /* regex match successful */
@@ -34,7 +35,9 @@ struct Inst {
   enum Opcode opcode;  /* as described above */
   union {
     int i;
-    int c;
+    struct {
+      int c, alt;
+    } chr;
     struct {
       unsigned mask, *charset;
     } set;
@@ -79,8 +82,12 @@ struct AST
 
 struct Program {
   struct Inst *code;
-  int size;
+  int options, size;
   unsigned charset[UCHAR_MAX];
+};
+
+enum Options {  /* bits */
+  IgnoreCase = 1
 };
 
 /* parse(*ast, prog, regex)
@@ -95,7 +102,7 @@ int parse(struct AST **ast, struct Program *prog, char *regex);
  *
  * Compile a regular expression (regex) into a program (prog).
  */
-int compile(struct Program *prog, char *regex);
+int compile(struct Program *prog, char *regex, int options);
 void freeprogram(struct Program *prog);
 
 /* vm(prog, input, saved)

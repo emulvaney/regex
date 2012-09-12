@@ -20,10 +20,54 @@
 #include "core.h"
 #include "debug.h"
 
+static char*
+range(char *s, int first, int last)
+{
+  *s++ = first;
+  if(last > first) {
+    if(last > first+1)
+      *s++ = '-';
+    *s++ = last;
+  }
+  return s;
+}
+
+static char*
+charset(char *buf, struct Inst *pc)
+{
+  unsigned *set = pc->args.set.charset;
+  unsigned mask = pc->args.set.mask;
+  unsigned marked = mask;
+  int c, first=0, last=0;
+  char *s = buf;
+
+  if(set[1] & mask) {  /* likely [^...] */
+    marked = 0;
+    *s++ = '^';
+  }
+  if((set[']'] & mask) == marked)
+    *s++ = ']';
+  for(c=1; c < UCHAR_MAX; c++) {
+    if((set[c] & mask) != marked || c == ']')
+      continue;
+    else if(last && last < c-1) {
+      s = range(s, first, last);
+      first = last = c;
+    } else {
+      last = c;
+      if(!first) first = c;
+    }
+  }
+  if(last) s = range(s, first, last);
+  *s = '\0';
+  return buf;
+}
+
 int
 printprogram(FILE *stream, struct Program *prog)
 {
   struct Inst *pc0, *pc;
+  char buf[UCHAR_MAX];
   int i;
 
   if(stream == NULL || prog == NULL || prog->size < 1)
@@ -33,14 +77,17 @@ printprogram(FILE *stream, struct Program *prog)
     pc = &prog->code[i];
     fprintf(stream, "%03d ", (int)(pc - pc0));
     switch(pc->opcode) {
+    case CharAlt:
+      fprintf(stream, "CharAlt %c %c\n", pc->args.chr.c, pc->args.chr.alt);
+      break;
     case Char:
-      fprintf(stream, "Char %c\n", pc->args.c);
+      fprintf(stream, "Char %c\n", pc->args.chr.c);
       break;
     case AnyChar:
       fprintf(stream, "AnyChar\n");
       break;
     case CharSet:
-      fprintf(stream, "CharSet [...]\n");
+      fprintf(stream, "CharSet [%s]\n", charset(buf, pc));
       break;
     case Match:
       fprintf(stream, "Match\n");

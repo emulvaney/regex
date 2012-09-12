@@ -130,10 +130,11 @@ main(int argc, char *argv[])
   struct Program prog;
   char *outfmt = NULL;
   int debug = 0, matched = 0, errors = 0;
-  int i, opt, rc;
+  int i, opt, rc, flags = 0;
 
-  while((opt = getopt(argc, argv, "do:")) != -1) {
+  while((opt = getopt(argc, argv, "ido:")) != -1) {
     switch(opt) {
+    case 'i': flags |= IgnoreCase; break;
     case 'd': debug  = 1;      break;
     case 'o': outfmt = optarg; break;
     default: goto badargs;
@@ -141,11 +142,11 @@ main(int argc, char *argv[])
   }
   if((i=optind) >= argc) {
   badargs:
-    fprintf(stderr, "usage: %s [-d] [-o fmt] (regex) [files...]\n",
+    fprintf(stderr, "usage: %s [-id] [-o fmt] (regex) [files...]\n",
 	    argv[0]);
     return 2;
   }
-  rc = compile(&prog, argv[i++]);
+  rc = compile(&prog, argv[i++], flags);
   if(rc) { perror("compile"); return 2; }
   if(debug) printprogram(stderr, &prog);
   do {

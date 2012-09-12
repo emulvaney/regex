@@ -145,15 +145,14 @@ vm(struct Program *prog, char *input, char **saved)
       t = &clist.t[i];
       pc = t->pc;
       switch(pc->opcode) {
+      case CharAlt: if(*sp == pc->args.chr.alt) goto okay; /* no break */
+      case Char:    if(*sp == pc->args.chr.c  ) goto okay;
+	break;
       case CharSet:
-	if(!(pc->args.set.charset[(unsigned char)*sp] & pc->args.set.mask)) {
+	if(!(pc->args.set.charset[(unsigned char)*sp] & pc->args.set.mask))
 	  break;
-	case Char:
-	  if(*sp != pc->args.c)
-	    break;
-	}
 	/* no break */
-      case AnyChar:
+      case AnyChar: okay:
 	addthread(&nlist, sp+1, thread(t->pc+1, t->saved));
 	break;
       case MatchEnd:

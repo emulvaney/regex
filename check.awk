@@ -18,8 +18,7 @@ BEGIN { tmp = "check.tmp" }
 
 function run() {
     close(tmp)
-    flags = outfmt ? " -o '" outfmt "'" : ""
-    grep = "./grep <" tmp flags " '" regex "'"
+    grep = "./grep <" tmp " " test
     printf "%s  # ", grep
     got=""; while((grep | getline line) > 0) {
 	got = got line RS
@@ -35,7 +34,7 @@ function run() {
 }
 
 END {
-    if(regex) run()
+    if(test) run()
     system("rm -f " tmp)
     if(failed) exit(failed)
     print "# All tests passed."
@@ -43,7 +42,7 @@ END {
 
 function die(why) {
     print FILENAME ":" FNR ": " why
-    failed=2; regex=""; exit
+    failed=2; test=""; exit
 }
 
 # Strip comments; skip blank lines.
@@ -51,12 +50,12 @@ function die(why) {
 length($0) == 0 { next }
 
 $1 == ":test" {
-    if(regex) run()
-    if(NF < 2) die("Regex expected.")
-    if(NF > 3) die("Too many fields.")
-    regex  = $2
-    outfmt = $3
+    if(test) run()
+    if(NF < 2) die("Test arguments expected.")
     expect = ""
+    test = "'" $2 "'"
+    for(i=3; i <= NF; i++)
+	test = test " '" $i "'"
     next
 }
 

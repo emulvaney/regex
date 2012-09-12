@@ -16,6 +16,7 @@
  */
 
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,21 +42,29 @@ enum { MAX_SAVE=9 };  /* capture only $0 through $9 */
 struct Flags {
   int matchend;  /* match to end of string */
   int nextsave;  /* 0..MAX_SAVE for Save instructions */
+  int nocase;    /* ignore the case of letters */
 };
 
 static struct Inst*
 compiletree(struct Inst *pc, struct Flags *flags, struct AST *t)
 {
   struct Inst *next;
-  int savepoint;
+  int c, savepoint;
 
   for(;;) {
     switch(t->op) {
     case Epsilon:
       goto done;
     case Onechar:
-      pc->opcode = Char;
-      pc->args.c = t->args.c;
+      c = t->args.c;
+      if(!flags->nocase || !isalpha(c)) {
+	pc->opcode = Char;
+	pc->args.chr.c = c;
+      } else {
+	pc->opcode = CharAlt;
+	pc->args.chr.c   = tolower(c);
+	pc->args.chr.alt = toupper(c);
+      }
       pc++;
       goto done;
     case Anychar:
@@ -147,7 +156,7 @@ compiletree(struct Inst *pc, struct Flags *flags, struct AST *t)
 }
 
 int
-compile(struct Program *prog, char *regex)
+compile(struct Program *prog, char *regex, int options)
 {
   struct AST *t;
   struct Inst *pc;
@@ -157,6 +166,7 @@ compile(struct Program *prog, char *regex)
 
   if(!prog || !regex)
     return (errno=EINVAL, -1);
+  prog->options = options;
   rc = parse(&t, prog, regex);
   if(rc) return rc;
   max = 2*strlen(regex) + MIN_CODESIZE;
@@ -165,6 +175,7 @@ compile(struct Program *prog, char *regex)
     free(t);
     return (errno=ENOMEM, -1);
   }
+  flags.nocase = !!(options & IgnoreCase);
   pc = compiletree(prog->code, &flags, t);
   pc->opcode = flags.matchend ? MatchEnd : Match;
   pc++;
