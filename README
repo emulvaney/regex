@@ -30,11 +30,12 @@ exercise for the reader, and it was a lot of fun being that reader.
 
 USAGE
 
-You can play with the grep program.  It takes two optional arguments,
--d and -o fmt.  The first dumps the byte-code assembler for the
-regular expression, before doing any matching.
+You can play with the grep program.  It takes three optional flags:
+-i, -d and -o fmt.  The first enables case-insensitivity; the second
+dumps the byte-code assembler for the regular expression before doing
+any matching.
 
-The second specifies the output format to use--this isn't common to
+The third specifies the output format to use--this isn't common to
 grep programs.  E.g., "echo hello | ./grep -o '$0,$1' 'h(.*)o'" will
 print "hello,ell" instead of the input line that you would normally
 see; $0 is replaced by the matched area, $1 by the first capture.
@@ -42,8 +43,8 @@ see; $0 is replaced by the matched area, $1 by the first capture.
 The library interface isn't complete.  If you need to add regular
 expressions to your program, you should try one of the libraries Russ
 suggests (see above).  This code is mainly for fun and currently omits
-handy features like optional case-insensitivity, named character
-classes (e.g., [:space:]) and Perl-style escapes for same (e.g., \s).
+handy features like named character classes (e.g., [:space:]) and
+Perl-style escapes for same (e.g., \s).
 
 If you really want to try the code in your own program, grep.c should
 be a good example of what you need to do.  The internal routines are
