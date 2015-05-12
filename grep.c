@@ -25,34 +25,18 @@
 #include "debug.h"
 
 static int
-output(char *str, size_t len)
-{
-  int rc;
-
-  do { rc = fwrite(str, 1, len, stdout); }
-  while(rc == EOF && errno == EINTR);
-  return rc;
-}
-
-static int
 print(char *line, char **captures, char *file, char *fmt)
 {
   size_t len;
-  int rc, i;
+  int i;
   
-  if(file) {
-    do { rc = printf("%s:", file); }
-    while(rc < 0 && errno == EINTR);
-    if(rc < 0) return rc;
-  }
-  if(!fmt) {
-    do { rc = puts(line); }
-    while(rc == EOF && errno == EINTR);
-    return rc;
-  }
+  if(file && printf("%s:", file) < 0)
+    return EOF;
+  if(!fmt)
+    return puts(line);
   for(;;) {
     if((len = strcspn(fmt, "$")) != 0) {
-      if(output(fmt, len) == EOF)
+      if(fwrite(fmt, 1, len, stdout) < len)
 	return EOF;
       fmt += len;
     }
@@ -63,30 +47,28 @@ print(char *line, char **captures, char *file, char *fmt)
       fmt += 2;
       if(captures[i] && captures[i+1]) {
 	len = captures[i+1] - captures[i];
-	if(output(captures[i], len) == EOF)
+	if(fwrite(captures[i], 1, len, stdout) < len)
 	  return EOF;
       }
     } else {
       switch(fmt[1]) {
-      case '$':  fmt++;  /* no break */
-      case '\0': len = 1; break;
-      default:   len = 2;
+        case '$':  fmt++;  /* no break */
+        case '\0': len = 1; break;
+        default:   len = 2;
       }
-      if(output(fmt, len) == EOF)
+      if(fwrite(fmt, 1, len, stdout) < len)
 	return EOF;
       fmt += len;
     }
   }
-  return output("\n", 1);
+  return putchar('\n');
 }
 
 static int
 readline(char *buf, size_t len, FILE* fin)
 {
-  while(fgets(buf, len, fin) == NULL) {
-    if(errno != EINTR)
-      return feof(fin) ? 0 : -1;
-  }
+  if(fgets(buf, len, fin) == NULL)
+    return feof(fin) ? 0 : -1;
   len = strlen(buf);
   if(buf[len-1] == '\n')
     buf[--len] = '\0';
@@ -102,9 +84,9 @@ grep(struct Program *prog, char *infile, char *outfmt)
 
   if(infile && !strcmp(infile, "-"))
     infile = "(standard input)";
-  else if(infile) {
-    while((fin = fopen(infile, "r")) == NULL)
-      if(errno != EINTR) { perror(infile); return -1; }
+  else if(infile && (fin = fopen(infile, "r")) == NULL) {
+    perror(infile);
+    return -1;
   }
   while((rc = readline(buf, sizeof buf, fin)) > 0) {
     if((rc = vm(prog, buf, captures)) > 0) {
@@ -117,9 +99,9 @@ grep(struct Program *prog, char *infile, char *outfmt)
     perror(infile ? infile : "(standard input)");
     matched = -1;
   }
-  if(fin && fin != stdin) {
-    while(fclose(fin) == EOF)
-      if(errno != EINTR) { perror(infile); return -1; }
+  if(fin && fin != stdin && fclose(fin) == EOF) {
+    perror(infile);
+    return -1;
   }
   return matched;
 }
@@ -134,13 +116,13 @@ main(int argc, char *argv[])
 
   while((opt = getopt(argc, argv, "ido:")) != -1) {
     switch(opt) {
-    case 'i': flags |= IgnoreCase; break;
-    case 'd': debug  = 1;      break;
-    case 'o': outfmt = optarg; break;
-    default: goto badargs;
+      case 'i': flags |= IgnoreCase; break;
+      case 'd': debug  = 1;      break;
+      case 'o': outfmt = optarg; break;
+      default: goto badargs;
     }
   }
-  if((i=optind) >= argc) {
+  if((i = optind) >= argc) {
   badargs:
     fprintf(stderr, "usage: %s [-id] [-o fmt] (regex) [files...]\n",
 	    argv[0]);
